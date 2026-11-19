@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}할 일 관리{% endblock %} | Todo Board</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand">Todo Board</a>
+      <nav class="nav">
+        <a href="/" class="nav-link">홈</a>
+        <a href="/todos" class="nav-link">할 일 목록</a>
+        <a href="/todos/new" class="btn btn-primary btn-sm">+ 새 할 일</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>FastAPI · SQLAlchemy · Jinja2 SSR 기반 할 일 관리 서비스 (B6-2)</p>
+    </div>
+  </footer>
+</body>
+</html>

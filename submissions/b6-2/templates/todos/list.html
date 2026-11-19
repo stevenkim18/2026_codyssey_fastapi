@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}할 일 목록{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>할 일 목록</h1>
+    <p class="subtitle">
+      전체 {{ summary.total }}건 · 진행 중 {{ summary.pending }}건 · 완료 {{ summary.completed }}건
+    </p>
+  </div>
+  <a href="/todos/new" class="btn btn-primary">+ 새 할 일 등록</a>
+</section>
+
+<section class="card search-card">
+  <form method="get" action="/todos" class="search-form">
+    <input
+      type="text"
+      name="q"
+      value="{{ keyword }}"
+      placeholder="제목으로 할 일 검색..."
+      class="input"
+      aria-label="제목 검색"
+    />
+    <button type="submit" class="btn btn-secondary">검색</button>
+    {% if keyword %}
+      <a href="/todos" class="btn btn-ghost">초기화</a>
+    {% endif %}
+  </form>
+  {% if keyword %}
+    <p class="search-meta">
+      <strong>"{{ keyword }}"</strong> 검색 결과: {{ todos | length }}건
+    </p>
+  {% endif %}
+</section>
+
+<section class="card">
+  {% if todos %}
+    <ul class="todo-list">
+      {% for todo in todos %}
+        <li class="todo-item {% if todo.is_completed %}is-completed{% endif %}">
+          <div class="todo-main">
+            <form method="post" action="/todos/{{ todo.id }}/toggle" class="inline-form">
+              <input type="hidden" name="next_url" value="/todos{% if keyword %}?q={{ keyword | urlencode }}{% endif %}" />
+              <button
+                type="submit"
+                class="toggle-btn {% if todo.is_completed %}checked{% endif %}"
+                title="완료 상태 변경"
+                aria-label="완료 상태 변경"
+              >
+                {% if todo.is_completed %}✓{% endif %}
+              </button>
+            </form>
+
+            <div class="todo-info">
+              <a href="/todos/{{ todo.id }}" class="todo-title">{{ todo.title }}</a>
+              <div class="todo-meta">
+                {% if todo.is_completed %}
+                  <span class="badge badge-done">완료</span>
+                {% else %}
+                  <span class="badge badge-pending">진행 중</span>
+                {% endif %}
+
+                {% if todo.due_date %}
+                  <span>마감일: {{ todo.due_date.strftime("%Y-%m-%d") }}</span>
+                {% else %}
+                  <span>마감일 없음</span>
+                {% endif %}
+                <span>작성일: {{ todo.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="todo-actions">
+            <a href="/todos/{{ todo.id }}" class="btn btn-ghost btn-sm">상세</a>
+            <a href="/todos/{{ todo.id }}/edit" class="btn btn-secondary btn-sm">수정</a>
+            <form
+              method="post"
+              action="/todos/{{ todo.id }}/delete"
+              class="inline-form"
+              onsubmit="return confirm('정말 이 할 일을 삭제하시겠습니까?');"
+            >
+              <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      {% if keyword %}
+        <p>"{{ keyword }}"에 해당하는 할 일이 없습니다.</p>
+        <a href="/todos" class="btn btn-secondary">전체 목록 보기</a>
+      {% else %}
+        <p>등록된 할 일이 아직 없습니다. 첫 번째 할 일을 추가해 보세요!</p>
+        <a href="/todos/new" class="btn btn-primary">새 할 일 등록하기</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

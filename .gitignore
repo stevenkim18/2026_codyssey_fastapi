@@ -1,0 +1,31 @@
+# Python & uv 가상환경
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# SQLite 데이터베이스
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# 환경변수 (비밀키 보호)
+.env
+.env.*
+!.env.example
+
+# OS & IDE
+.DS_Store
+.vscode/
+.idea/
+
+# 교육기관 문제 파일 비공개 시 주석 해제
+# subjects/

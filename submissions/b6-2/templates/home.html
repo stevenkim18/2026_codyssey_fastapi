@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}홈{% endblock %}
+
+{% block content %}
+<section class="hero card">
+  <span class="eyebrow">FastAPI + SQLAlchemy CRUD</span>
+  <h1>나의 할 일 관리 앱</h1>
+  <p class="hero-desc">
+    해야 할 일을 등록하고 목록 조회, 상세 확인, 수정, 완료 처리 및 삭제까지 한 번에 관리할 수 있는 웹 서비스입니다.<br />
+    모든 데이터는 SQLite 데이터베이스에 안전하게 저장됩니다.
+  </p>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <span class="stat-label">전체 할 일</span>
+      <strong class="stat-value">{{ summary.total }}</strong>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">진행 중</span>
+      <strong class="stat-value text-pending">{{ summary.pending }}</strong>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">완료됨</span>
+      <strong class="stat-value text-done">{{ summary.completed }}</strong>
+    </div>
+  </div>
+
+  <div class="hero-actions">
+    <a href="/todos" class="btn btn-primary">할 일 목록 보기</a>
+    <a href="/todos/new" class="btn btn-secondary">새 할 일 등록하기</a>
+  </div>
+</section>
+{% endblock %}

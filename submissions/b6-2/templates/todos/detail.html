@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}할 일 상세{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <span class="eyebrow">할 일 #{{ todo.id }}</span>
+    <h1>{{ todo.title }}</h1>
+  </div>
+  <div>
+    {% if todo.is_completed %}
+      <span class="badge badge-done badge-lg">완료</span>
+    {% else %}
+      <span class="badge badge-pending badge-lg">진행 중</span>
+    {% endif %}
+  </div>
+</section>
+
+<section class="card detail-card">
+  <dl class="detail-grid">
+    <div class="detail-row">
+      <dt>번호 (ID)</dt>
+      <dd>#{{ todo.id }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>제목</dt>
+      <dd>{{ todo.title }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>완료 여부</dt>
+      <dd>{% if todo.is_completed %}완료됨{% else %}진행 중{% endif %}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>마감일</dt>
+      <dd>
+        {% if todo.due_date %}
+          {{ todo.due_date.strftime("%Y-%m-%d") }}
+        {% else %}
+          <span class="muted">지정되지 않음</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row">
+      <dt>작성일시</dt>
+      <dd>{{ todo.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</dd>
+    </div>
+    <div class="detail-row detail-row-full">
+      <dt>상세 내용</dt>
+      <dd class="detail-description">
+        {% if todo.description %}
+          {{ todo.description }}
+        {% else %}
+          <span class="muted">작성된 상세 내용이 없습니다.</span>
+        {% endif %}
+      </dd>
+    </div>
+  </dl>
+
+  <div class="detail-actions">
+    <div class="actions-left">
+      <a href="/todos" class="btn btn-ghost">← 목록으로</a>
+    </div>
+    <div class="actions-right">
+      <form method="post" action="/todos/{{ todo.id }}/toggle" class="inline-form">
+        <input type="hidden" name="next_url" value="/todos/{{ todo.id }}" />
+        <button type="submit" class="btn btn-secondary">
+          {% if todo.is_completed %}진행 중으로 변경{% else %}완료로 표시{% endif %}
+        </button>
+      </form>
+      <a href="/todos/{{ todo.id }}/edit" class="btn btn-primary">수정</a>
+      <form
+        method="post"
+        action="/todos/{{ todo.id }}/delete"
+        class="inline-form"
+        onsubmit="return confirm('정말 이 할 일을 삭제하시겠습니까?');"
+      >
+        <button type="submit" class="btn btn-danger">삭제</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
