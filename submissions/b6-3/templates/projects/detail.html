@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <span class="eyebrow">Project #{{ project.id }}</span>
+    <h1>{{ project.name }}</h1>
+    <p class="subtitle">
+      소유자: <a href="/users/{{ project.owner.id }}" class="text-link">{{ project.owner.username }}</a>
+      · 생성일: {{ project.created_at.strftime("%Y-%m-%d %H:%M") }}
+    </p>
+  </div>
+  <span class="badge badge-lg badge-project-{{ project.status }}">
+    {{ PROJECT_STATUS_LABELS[project.status] }}
+  </span>
+</section>
+
+<section class="card">
+  <p class="detail-description">{{ project.description or "작성된 프로젝트 설명이 없습니다." }}</p>
+
+  {% if project.owner_id == current_user.id %}
+    <div class="state-bar">
+      <span class="state-label">프로젝트 상태 변경:</span>
+      {% for key, label in PROJECT_STATUS_LABELS.items() %}
+        <form method="post" action="/projects/{{ project.id }}/status" class="inline-form">
+          <input type="hidden" name="status" value="{{ key }}" />
+          <input type="hidden" name="next_url" value="/projects/{{ project.id }}" />
+          <button
+            type="submit"
+            class="btn btn-sm {% if project.status == key %}btn-primary{% else %}btn-secondary{% endif %}"
+            {% if project.status == key %}disabled{% endif %}
+          >
+            {{ label }}
+          </button>
+        </form>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="detail-actions">
+    <div class="actions-left">
+      <a href="/projects" class="btn btn-ghost">← 프로젝트 목록</a>
+    </div>
+    <div class="actions-right">
+      {% if project.status != "archived" %}
+        <a href="/todos/new?project_id={{ project.id }}" class="btn btn-primary">+ 이 프로젝트에 할 일 추가</a>
+      {% endif %}
+      {% if project.owner_id == current_user.id %}
+        <a href="/projects/{{ project.id }}/edit" class="btn btn-secondary">수정</a>
+        <form
+          method="post"
+          action="/projects/{{ project.id }}/delete"
+          class="inline-form"
+          onsubmit="return confirm('프로젝트를 삭제하면 소속된 할 일도 함께 삭제됩니다. 정말 삭제하시겠습니까?');"
+        >
+          <button type="submit" class="btn btn-danger">삭제</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-header">
+    <h2>소속 할 일 목록 ({{ project.todos | length }}건)</h2>
+    <span class="muted">Project 1:N Todo 연관관계</span>
+  </div>
+
+  {% if project.todos %}
+    <ul class="todo-list">
+      {% for todo in project.todos %}
+        <li class="todo-item {% if todo.status == 'done' %}is-completed{% endif %}">
+          <div class="todo-info">
+            <a href="/todos/{{ todo.id }}" class="todo-title">{{ todo.title }}</a>
+            <div class="todo-meta">
+              <span class="badge badge-todo-{{ todo.status }}">{{ TODO_STATUS_LABELS[todo.status] }}</span>
+              <span>작성자: <a href="/users/{{ todo.author.id }}" class="text-link">{{ todo.author.username }}</a></span>
+              {% if todo.due_date %}
+                <span>마감일: {{ todo.due_date.strftime("%Y-%m-%d") }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="todo-actions">
+            {% if todo.author_id == current_user.id or project.owner_id == current_user.id %}
+              {% if todo.status == "todo" %}
+                <form method="post" action="/todos/{{ todo.id }}/status" class="inline-form">
+                  <input type="hidden" name="status" value="in_progress" />
+                  <input type="hidden" name="next_url" value="/projects/{{ project.id }}" />
+                  <button type="submit" class="btn btn-secondary btn-sm">진행 시작</button>
+                </form>
+              {% elif todo.status == "in_progress" %}
+                <form method="post" action="/todos/{{ todo.id }}/status" class="inline-form">
+                  <input type="hidden" name="status" value="done" />
+                  <input type="hidden" name="next_url" value="/projects/{{ project.id }}" />
+                  <button type="submit" class="btn btn-primary btn-sm">완료 처리</button>
+                </form>
+              {% else %}
+                <form method="post" action="/todos/{{ todo.id }}/status" class="inline-form">
+                  <input type="hidden" name="status" value="in_progress" />
+                  <input type="hidden" name="next_url" value="/projects/{{ project.id }}" />
+                  <button type="submit" class="btn btn-ghost btn-sm">다시 진행</button>
+                </form>
+              {% endif %}
+            {% endif %}
+            <a href="/todos/{{ todo.id }}" class="btn btn-ghost btn-sm">상세</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <p>이 프로젝트에 아직 등록된 할 일이 없습니다.</p>
+      {% if project.status != "archived" %}
+        <a href="/todos/new?project_id={{ project.id }}" class="btn btn-primary">첫 번째 할 일 추가</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}할 일 목록{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>할 일 목록</h1>
+    <p class="subtitle">제목 검색, 상태, 프로젝트, 작성자 조건으로 동적 필터링할 수 있습니다.</p>
+  </div>
+  <a href="/todos/new" class="btn btn-primary">+ 새 할 일</a>
+</section>
+
+<section class="card search-card">
+  <form method="get" action="/todos" class="filter-form">
+    <input
+      type="text"
+      name="q"
+      value="{{ keyword }}"
+      placeholder="할 일 제목 검색..."
+      class="input"
+    />
+    <select name="status" class="select">
+      <option value="">전체 상태</option>
+      {% for key, label in TODO_STATUS_LABELS.items() %}
+        <option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="project_id" class="select">
+      <option value="">전체 프로젝트</option>
+      {% for project in projects %}
+        <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
+          {{ project.name }}
+        </option>
+      {% endfor %}
+    </select>
+    <label class="checkbox-label inline-check">
+      <input type="checkbox" name="mine" value="true" {% if only_mine %}checked{% endif %} />
+      <span>내 할 일만</span>
+    </label>
+    <button type="submit" class="btn btn-secondary">필터 적용</button>
+    {% if keyword or selected_status or selected_project_id or only_mine %}
+      <a href="/todos" class="btn btn-ghost">초기화</a>
+    {% endif %}
+  </form>
+</section>
+
+<section class="card">
+  {% if todos %}
+    <ul class="todo-list">
+      {% for todo in todos %}
+        <li class="todo-item {% if todo.status == 'done' %}is-completed{% endif %}">
+          <div class="todo-info">
+            <a href="/todos/{{ todo.id }}" class="todo-title">{{ todo.title }}</a>
+            <div class="todo-meta">
+              <span class="badge badge-todo-{{ todo.status }}">{{ TODO_STATUS_LABELS[todo.status] }}</span>
+              <span>프로젝트: <a href="/projects/{{ todo.project.id }}" class="text-link">{{ todo.project.name }}</a></span>
+              <span>작성자: <a href="/users/{{ todo.author.id }}" class="text-link">{{ todo.author.username }}</a></span>
+              {% if todo.due_date %}
+                <span>마감일: {{ todo.due_date.strftime("%Y-%m-%d") }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="todo-actions">
+            <a href="/todos/{{ todo.id }}" class="btn btn-ghost btn-sm">상세</a>
+            {% if todo.author_id == current_user.id %}
+              <a href="/todos/{{ todo.id }}/edit" class="btn btn-secondary btn-sm">수정</a>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <p>조건에 맞는 할 일이 없습니다.</p>
+      <a href="/todos/new" class="btn btn-primary">새 할 일 등록하기</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}프로젝트 수정{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <span class="eyebrow">Project #{{ project.id }}</span>
+    <h1>프로젝트 수정</h1>
+  </div>
+</section>
+
+<section class="card">
+  {% if error %}
+    <div class="alert alert-error" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/projects/{{ project.id }}/edit" class="todo-form" novalidate>
+    <div class="form-group">
+      <label for="name" class="form-label">프로젝트 이름 <span class="required">*</span></label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        value="{{ form_data.name }}"
+        maxlength="100"
+        class="input"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="description" class="form-label">설명</label>
+      <textarea
+        id="description"
+        name="description"
+        rows="4"
+        class="textarea"
+      >{{ form_data.description }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="status" class="form-label">상태</label>
+      <select id="status" name="status" class="select">
+        {% for key, label in PROJECT_STATUS_LABELS.items() %}
+          <option value="{{ key }}" {% if form_data.status == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <a href="/projects/{{ project.id }}" class="btn btn-ghost">취소</a>
+      <button type="submit" class="btn btn-primary">수정 저장</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

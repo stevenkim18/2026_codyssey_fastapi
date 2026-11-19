@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ status_code }} {{ title }}{% endblock %}
+
+{% block content %}
+<section class="card empty-state not-found-card">
+  <span class="eyebrow">HTTP {{ status_code }}</span>
+  <h1>{{ title }}</h1>
+  <p class="subtitle">{{ detail }}</p>
+  <div class="hero-actions" style="margin-top: 22px;">
+    {% if current_user %}
+      <a href="/projects" class="btn btn-primary">프로젝트 목록으로</a>
+      <a href="/todos" class="btn btn-secondary">할 일 목록으로</a>
+    {% else %}
+      <a href="/login" class="btn btn-primary">로그인하기</a>
+      <a href="/" class="btn btn-secondary">홈으로 이동</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

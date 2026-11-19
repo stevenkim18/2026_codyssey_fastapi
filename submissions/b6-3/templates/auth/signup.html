@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}회원가입{% endblock %}
+
+{% block content %}
+<section class="auth-wrapper">
+  <div class="card auth-card">
+    <span class="eyebrow">Create Account</span>
+    <h1>회원가입</h1>
+    <p class="subtitle">비밀번호는 bcrypt로 안전하게 해싱되어 저장됩니다.</p>
+
+    {% if error %}
+      <div class="alert alert-error" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/signup" class="todo-form" novalidate>
+      <div class="form-group">
+        <label for="username" class="form-label">사용자 이름 <span class="required">*</span></label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          value="{{ form_data.username }}"
+          placeholder="2~30자 (예: minsu)"
+          class="input"
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">이메일 <span class="required">*</span></label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value="{{ form_data.email }}"
+          placeholder="you@example.com"
+          class="input"
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">비밀번호 <span class="required">*</span></label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="6자 이상 입력"
+          class="input"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password_confirm" class="form-label">비밀번호 확인 <span class="required">*</span></label>
+        <input
+          type="password"
+          id="password_confirm"
+          name="password_confirm"
+          placeholder="비밀번호 재입력"
+          class="input"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">가입하고 시작하기</button>
+    </form>
+
+    <div class="divider"><span>또는</span></div>
+
+    <a href="/auth/google/login" class="btn btn-google btn-full">
+      Google 계정으로 간편 가입
+    </a>
+
+    <p class="auth-footer">
+      이미 계정이 있으신가요? <a href="/login" class="text-link">로그인</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

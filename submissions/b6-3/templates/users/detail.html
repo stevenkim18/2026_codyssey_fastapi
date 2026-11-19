@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ target_user.username }}님의 프로필{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <span class="eyebrow">Member #{{ target_user.id }}</span>
+    <h1>{{ target_user.username }}</h1>
+    <p class="subtitle">
+      {{ target_user.email }} · 가입 방식: {{ "Google OAuth2" if target_user.provider == "google" else "로컬 회원가입" }}
+      · 가입일: {{ target_user.created_at.strftime("%Y-%m-%d") }}
+    </p>
+  </div>
+  <a href="/users" class="btn btn-ghost">← 회원 목록</a>
+</section>
+
+<section class="card">
+  <div class="section-header">
+    <h2>소유한 프로젝트 ({{ target_user.projects | length }}개)</h2>
+    <span class="muted">User 1:N Project 연관관계</span>
+  </div>
+  {% if target_user.projects %}
+    <ul class="todo-list">
+      {% for project in target_user.projects %}
+        <li class="todo-item">
+          <div class="todo-info">
+            <a href="/projects/{{ project.id }}" class="todo-title">{{ project.name }}</a>
+            <div class="todo-meta">
+              <span class="badge badge-project-{{ project.status }}">{{ PROJECT_STATUS_LABELS[project.status] }}</span>
+              <span>소속 할 일 {{ project.todos | length }}건</span>
+            </div>
+          </div>
+          <a href="/projects/{{ project.id }}" class="btn btn-ghost btn-sm">열기</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">아직 생성한 프로젝트가 없습니다.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="section-header">
+    <h2>작성한 할 일 ({{ target_user.todos | length }}건)</h2>
+    <span class="muted">User 1:N Todo 연관관계</span>
+  </div>
+  {% if target_user.todos %}
+    <ul class="todo-list">
+      {% for todo in target_user.todos %}
+        <li class="todo-item {% if todo.status == 'done' %}is-completed{% endif %}">
+          <div class="todo-info">
+            <a href="/todos/{{ todo.id }}" class="todo-title">{{ todo.title }}</a>
+            <div class="todo-meta">
+              <span class="badge badge-todo-{{ todo.status }}">{{ TODO_STATUS_LABELS[todo.status] }}</span>
+              <span>프로젝트: <a href="/projects/{{ todo.project.id }}" class="text-link">{{ todo.project.name }}</a></span>
+            </div>
+          </div>
+          <a href="/todos/{{ todo.id }}" class="btn btn-ghost btn-sm">상세</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">아직 작성한 할 일이 없습니다.</p>
+  {% endif %}
+</section>
+{% endblock %}

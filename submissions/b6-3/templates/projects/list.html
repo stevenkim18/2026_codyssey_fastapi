@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}프로젝트 목록{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>프로젝트 목록</h1>
+    <p class="subtitle">회원들이 만든 프로젝트를 둘러보고 소속된 할 일을 확인하세요.</p>
+  </div>
+  <a href="/projects/new" class="btn btn-primary">+ 새 프로젝트</a>
+</section>
+
+<section class="card search-card">
+  <form method="get" action="/projects" class="filter-form">
+    <input
+      type="text"
+      name="q"
+      value="{{ keyword }}"
+      placeholder="프로젝트 이름 검색..."
+      class="input"
+    />
+    <select name="status" class="select">
+      <option value="">전체 상태</option>
+      {% for key, label in PROJECT_STATUS_LABELS.items() %}
+        <option value="{{ key }}" {% if selected_status == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <label class="checkbox-label inline-check">
+      <input type="checkbox" name="mine" value="true" {% if only_mine %}checked{% endif %} />
+      <span>내 프로젝트만</span>
+    </label>
+    <button type="submit" class="btn btn-secondary">필터 적용</button>
+    {% if keyword or selected_status or only_mine %}
+      <a href="/projects" class="btn btn-ghost">초기화</a>
+    {% endif %}
+  </form>
+</section>
+
+{% if projects %}
+  <div class="card-grid">
+    {% for project in projects %}
+      <article class="card project-card">
+        <div class="card-top">
+          <span class="badge badge-project-{{ project.status }}">
+            {{ PROJECT_STATUS_LABELS[project.status] }}
+          </span>
+          <span class="meta-date">{{ project.created_at.strftime("%Y-%m-%d") }}</span>
+        </div>
+
+        <h2 class="card-title">
+          <a href="/projects/{{ project.id }}">{{ project.name }}</a>
+        </h2>
+        <p class="card-desc">
+          {{ project.description or "프로젝트 설명이 아직 없습니다." }}
+        </p>
+
+        <div class="card-meta">
+          <span>소유자: <a href="/users/{{ project.owner.id }}" class="text-link">{{ project.owner.username }}</a></span>
+          <span>소속 할 일: <strong>{{ project.todos | length }}건</strong></span>
+        </div>
+
+        <div class="card-footer">
+          <a href="/projects/{{ project.id }}" class="btn btn-secondary btn-sm">상세 보기</a>
+          {% if project.owner_id == current_user.id %}
+            <a href="/projects/{{ project.id }}/edit" class="btn btn-ghost btn-sm">수정</a>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <section class="card empty-state">
+    <p>조건에 맞는 프로젝트가 없습니다.</p>
+    <a href="/projects/new" class="btn btn-primary">새 프로젝트 만들기</a>
+  </section>
+{% endif %}
+{% endblock %}

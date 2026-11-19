@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Team Todo Hub{% endblock %} | B6-3</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand">Team Todo Hub</a>
+
+      <nav class="nav">
+        <a href="/" class="nav-link">홈</a>
+        {% if current_user %}
+          <a href="/projects" class="nav-link">프로젝트</a>
+          <a href="/todos" class="nav-link">할 일</a>
+          <a href="/users" class="nav-link">회원</a>
+          <span class="user-greeting">
+            <a href="/users/{{ current_user.id }}"><strong>{{ current_user.username }}</strong>님 환영합니다</a>
+          </span>
+          <form method="post" action="/logout" class="inline-form">
+            <button type="submit" class="btn btn-secondary btn-sm">로그아웃</button>
+          </form>
+        {% else %}
+          <a href="/login" class="btn btn-secondary btn-sm">로그인</a>
+          <a href="/signup" class="btn btn-primary btn-sm">회원가입</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>FastAPI · JWT · Google OAuth2 · SQLAlchemy 연관관계 기반 팀 할 일 관리 서비스 (B6-3)</p>
+    </div>
+  </footer>
+</body>
+</html>

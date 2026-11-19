@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ todo.title }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <span class="eyebrow">Todo #{{ todo.id }}</span>
+    <h1>{{ todo.title }}</h1>
+  </div>
+  <span class="badge badge-lg badge-todo-{{ todo.status }}">
+    {{ TODO_STATUS_LABELS[todo.status] }}
+  </span>
+</section>
+
+<section class="card">
+  <dl class="detail-grid">
+    <div class="detail-row">
+      <dt>소속 프로젝트</dt>
+      <dd><a href="/projects/{{ todo.project.id }}" class="text-link">{{ todo.project.name }}</a></dd>
+    </div>
+    <div class="detail-row">
+      <dt>작성자</dt>
+      <dd><a href="/users/{{ todo.author.id }}" class="text-link">{{ todo.author.username }}</a></dd>
+    </div>
+    <div class="detail-row">
+      <dt>현재 상태</dt>
+      <dd>{{ TODO_STATUS_LABELS[todo.status] }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>마감일</dt>
+      <dd>
+        {% if todo.due_date %}
+          {{ todo.due_date.strftime("%Y-%m-%d") }}
+        {% else %}
+          <span class="muted">지정되지 않음</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row detail-row-full">
+      <dt>상세 내용</dt>
+      <dd class="detail-description">
+        {% if todo.description %}
+          {{ todo.description }}
+        {% else %}
+          <span class="muted">작성된 상세 내용이 없습니다.</span>
+        {% endif %}
+      </dd>
+    </div>
+  </dl>
+
+  {% if can_change_status %}
+    <div class="state-bar">
+      <span class="state-label">상태 전이 (대기 → 진행 중 → 완료):</span>
+      {% for key, label in TODO_STATUS_LABELS.items() %}
+        <form method="post" action="/todos/{{ todo.id }}/status" class="inline-form">
+          <input type="hidden" name="status" value="{{ key }}" />
+          <input type="hidden" name="next_url" value="/todos/{{ todo.id }}" />
+          <button
+            type="submit"
+            class="btn btn-sm {% if todo.status == key %}btn-primary{% else %}btn-secondary{% endif %}"
+            {% if todo.status == key %}disabled{% endif %}
+          >
+            {{ label }}
+          </button>
+        </form>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="detail-actions">
+    <div class="actions-left">
+      <a href="/todos" class="btn btn-ghost">← 할 일 목록</a>
+      <a href="/projects/{{ todo.project.id }}" class="btn btn-ghost">프로젝트로 이동</a>
+    </div>
+    <div class="actions-right">
+      {% if todo.author_id == current_user.id %}
+        <a href="/todos/{{ todo.id }}/edit" class="btn btn-secondary">수정</a>
+        <form
+          method="post"
+          action="/todos/{{ todo.id }}/delete"
+          class="inline-form"
+          onsubmit="return confirm('정말 이 할 일을 삭제하시겠습니까?');"
+        >
+          <button type="submit" class="btn btn-danger">삭제</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

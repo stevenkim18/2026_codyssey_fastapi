@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}회원 목록{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>회원 목록</h1>
+    <p class="subtitle">가입된 회원들과 각 회원이 만든 프로젝트·할 일을 확인할 수 있습니다.</p>
+  </div>
+</section>
+
+<div class="card-grid">
+  {% for user in users %}
+    <article class="card">
+      <div class="card-top">
+        <span class="badge {% if user.provider == 'google' %}badge-project-active{% else %}badge-todo-todo{% endif %}">
+          {{ "Google" if user.provider == "google" else "일반 가입" }}
+        </span>
+        {% if user.id == current_user.id %}
+          <span class="badge badge-todo-done">내 계정</span>
+        {% endif %}
+      </div>
+
+      <h2 class="card-title">
+        <a href="/users/{{ user.id }}">{{ user.username }}</a>
+      </h2>
+      <p class="card-desc">{{ user.email }}</p>
+
+      <div class="card-meta">
+        <span>프로젝트 <strong>{{ user.projects | length }}</strong>개</span>
+        <span>작성한 할 일 <strong>{{ user.todos | length }}</strong>건</span>
+      </div>
+
+      <div class="card-footer">
+        <a href="/users/{{ user.id }}" class="btn btn-secondary btn-sm">활동 내역 보기</a>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+{% endblock %}
