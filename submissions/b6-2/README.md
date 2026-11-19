@@ -237,3 +237,96 @@ conn.close()
 - [x] **보너스 1 (검색)**: `GET /todos?q=...` + SQLAlchemy `filter(Todo.title.like(...))`
 - [x] **보너스 2 (검증)**: Pydantic `@field_validator` 기반 서버 사이드 검증 및 오류 안내
 - [x] **보너스 3 (UX 개선)**: 목록·상세 원클릭 완료 토글, 삭제 확인 창, 자연스러운 화면 전환
+
+---
+
+## 9. 향후 확장 가이드: 모델 간 연관관계 추가 및 마이그레이션 절차
+
+> 본 미션(`b6-2`)은 제약 사항에 따라 **단일 모델(`Todo`) CRUD** 범위만 코드로 구현했습니다.
+> 추후 `User(회원)` 또는 `Project(프로젝트)` 모델을 추가해 **1:N / N:1 연관관계**로 확장할 때 필요한 모델 변경 내용과 DB 마이그레이션 절차는 아래와 같습니다. (실제 확장 구현은 `submissions/b6-3/`에 반영되어 있습니다.)
+
+### 1) 모델 변경: 필드 · `ForeignKey` · `relationship` 추가
+
+예를 들어 `Project(1)` ↔ `Todo(N)` 양방향 연관관계를 추가할 때는 다음과 같이 모델을 정의합니다.
+
+```python
+# models/project.py (신규 부모 모델)
+from sqlalchemy import Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from database import Base
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    # 1:N 양방향 연관관계 — 부모 삭제 시 자식 할 일도 함께 정리(cascade)
+    todos: Mapped[list["Todo"]] = relationship(
+        "Todo",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
+```
+
+```python
+# models/todo.py (기존 자식 모델에 외래키 및 relationship 추가)
+from sqlalchemy import ForeignKey, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+class Todo(Base):
+    __tablename__ = "todos"
+    # ... 기존 필드 (id, title, description, is_completed, due_date, created_at) ...
+
+    # 1. 외래키(ForeignKey) 컬럼 추가 (기존 데이터가 있다면 초기에는 nullable=True 권장)
+    project_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("projects.id"),
+        nullable=True,
+        index=True,
+    )
+
+    # 2. N:1 양방향 연관관계 매핑 (Project.todos와 back_populates로 연결)
+    project: Mapped["Project | None"] = relationship(
+        "Project",
+        back_populates="todos",
+    )
+```
+
+### 2) 데이터베이스 마이그레이션 절차
+
+SQLAlchemy의 `Base.metadata.create_all(bind=engine)`은 **존재하지 않는 새 테이블만 생성**하며, 이미 생성된 `todos` 테이블에 새 컬럼(`project_id`)이나 `ForeignKey`를 자동으로 `ALTER TABLE` 해주지 않습니다. 따라서 아래 절차로 스키마를 안전하게 마이그레이션해야 합니다.
+
+#### A. 로컬 개발(SQLite) 환경 — 기존 데이터 보존이 필요 없는 경우
+1. 서버를 중지하고 기존 `database.db`를 백업(`cp database.db database.db.bak`)하거나 삭제합니다.
+2. `main.py`에서 새 모델(`Project`)을 임포트해 `Base.metadata`에 등록합니다.
+3. 서버를 다시 실행하면 `Base.metadata.create_all(bind=engine)`이 `projects` 테이블과 `project_id` 외래키가 포함된 `todos` 테이블을 새로 생성합니다.
+
+#### B. 기존 데이터를 유지해야 하는 경우 — 단계적 마이그레이션 (Alembic 기준)
+실무나 기존 데이터가 있는 DB에서는 **Alembic**을 사용해 무중단/단계적으로 스키마를 변경합니다.
+
+1. **마이그레이션 환경 초기화**
+   ```bash
+   alembic init alembic
+   ```
+   * `alembic/env.py`에서 `target_metadata = Base.metadata`로 연결합니다.
+   * **SQLite 주의사항**: SQLite는 `ALTER TABLE ... ADD CONSTRAINT FOREIGN KEY`를 직접 지원하지 않으므로, `alembic/env.py`의 `context.configure(...)`에 `render_as_batch=True` 옵션을 켜서 배치(임시 테이블 재생성) 모드로 마이그레이션합니다.
+2. **마이그레이션 스크립트 생성 및 검토**
+   ```bash
+   alembic revision --autogenerate -m "add projects table and todo.project_id fk"
+   ```
+   * 생성된 리비전 파일에서 `projects` 테이블 생성, `todos.project_id` 컬럼 추가, `ForeignKey` 제약조건이 의도대로 작성되었는지 확인합니다.
+3. **기존 데이터 백필(Backfill) 후 `NOT NULL` 전환**
+   * 기존 `todos` 레코드가 있다면 ① `project_id`를 `nullable=True`로 먼저 추가 → ② 기본 프로젝트 레코드 생성 및 기존 `todos.project_id` 일괄 `UPDATE` → ③ 필요 시 `nullable=False`로 제약조건을 강화하는 2단계 마이그레이션을 수행합니다.
+4. **마이그레이션 적용 및 롤백 검증**
+   ```bash
+   alembic upgrade head      # 최신 스키마 적용
+   alembic downgrade -1      # 문제 발생 시 직전 버전으로 롤백
+   ```
+
+### 3) 계층별 코드 후속 수정 체크리스트
+모델과 DB 스키마를 변경한 뒤에는 레이어 분리 구조에 따라 아래 순서로 코드를 업데이트합니다.
+1. **`schemas/todo.py`**: `TodoCreate` / `TodoUpdate`에 `project_id` 필드 추가, `TodoResponse`에 프로젝트 요약 정보 포함
+2. **`repositories/todo_repository.py`**: 목록/상세 조회 시 N+1 쿼리를 방지하기 위해 `joinedload(Todo.project)` 적용
+3. **`services/todo_service.py`**: 할 일 생성·수정 시 대상 `project_id` 존재 여부 및 비즈니스 규칙 검증
+4. **`routers/todos.py` & `templates/todos/*.html`**: 등록/수정 폼에 프로젝트 선택 `<select>` 추가 및 상세 화면에 소속 프로젝트 링크 출력
